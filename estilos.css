@@ -1,0 +1,168 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #0f0f1a;
+  color: #eaeaea;
+  min-height: 100vh;
+  padding: 16px;
+}
+.contenedor { max-width: 480px; margin: 0 auto; }
+header { text-align: center; margin-bottom: 24px; }
+h1 { font-size: 1.6rem; color: #2dd4bf; }
+.subtitulo { font-size: 0.95rem; opacity: 0.75; margin-top: 4px; }
+
+.btn-principal, .btn-secundario {
+  display: block; width: 100%; padding: 14px; border: none; border-radius: 10px;
+  font-size: 1.1rem; font-weight: 600; cursor: pointer; text-align: center;
+  text-decoration: none; color: white;
+}
+.btn-principal { background: #0d9488; }
+.btn-secundario { background: #2a2a40; color: #eaeaea; }
+
+.tarjeta {
+  background: #1a1a2e; border-radius: 16px; padding: 20px; margin-top: 16px;
+}
+.codigo { font-size: 1.1rem; margin-bottom: 14px; }
+.pvp { font-size: 2.1rem; font-weight: 700; color: #4ade80; margin: 10px 0; }
+.precio-web { font-size: 1.15rem; opacity: 0.85; }
+.titulo-prod { font-size: 1.15rem; margin-bottom: 8px; line-height: 1.3; }
+.oculto { display: none; }
+
+/* Spinner de carga */
+.cargando {
+  text-align: center;
+  padding: 24px 10px;
+  opacity: 0.9;
+}
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 4px solid #333;
+  border-top: 4px solid #2dd4bf;
+  border-radius: 50%;
+  animation: girar 0.8s linear infinite;
+  margin: 0 auto 14px auto;
+}
+@keyframes girar {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+footer { text-align: center; margin-top: 40px; font-size: 0.75rem; opacity: 0.5; }
+
+
+.producto-imagen-wrap {
+  margin: 0 0 18px;
+  padding: 12px;
+  background: #fff;
+  border-radius: 12px;
+  text-align: center;
+}
+.producto-imagen {
+  display: block;
+  width: 100%;
+  max-width: 320px;
+  max-height: 360px;
+  margin: 0 auto;
+  object-fit: contain;
+  border-radius: 8px;
+}
+.producto-imagen-wrap figcaption {
+  margin-top: 8px;
+  color: #444;
+  font-size: .78rem;
+}
+.sin-imagen {
+  margin-bottom: 14px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #25253b;
+  font-size: .88rem;
+  opacity: .8;
+  text-align: center;
+}
+
+.sku { font-size: 1.05rem; margin: 8px 0 4px; opacity: 0.92; }
+
+/* ------------------------------------------------------------------ */
+/* Stock en tiendas                                                     */
+/* ------------------------------------------------------------------ */
+
+.centros {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #2f2f48;
+}
+.centros-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.centros-cabecera h2 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+.btn-refrescar {
+  flex: 0 0 auto;
+  padding: 7px 12px;
+  border: 1px solid #3a3a58;
+  border-radius: 8px;
+  background: #23233a;
+  color: #cfcfe6;
+  font-size: .8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-refrescar:active { background: #2f2f4a; }
+
+.centros-resumen {
+  margin: 6px 0 12px;
+  font-size: .85rem;
+  opacity: .7;
+}
+.centros-vacio {
+  margin-top: 10px;
+  font-size: .88rem;
+  opacity: .75;
+}
+
+.centros-lista { list-style: none; }
+.centro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 12px;
+  margin-bottom: 6px;
+  border-radius: 10px;
+  background: #212135;
+  border-left: 4px solid #4a4a6a;
+}
+.centro-nombre {
+  font-size: .98rem;
+  font-weight: 600;
+}
+.centro-estado {
+  flex: 0 0 auto;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: .78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  background: #33334f;
+  color: #d5d5ea;
+}
+
+/* Semaforo: verde disponible, ambar bajo encargo, rojo sin stock. */
+.centro--stock { border-left-color: #4ade80; }
+.centro--stock .centro-estado { background: #14532d; color: #86efac; }
+
+.centro--encargo { border-left-color: #fbbf24; }
+.centro--encargo .centro-estado { background: #4a3506; color: #fcd34d; }
+
+.centro--sin { border-left-color: #f87171; opacity: .72; }
+.centro--sin .centro-estado { background: #4c1d1d; color: #fca5a5; }
+
+.centro--otro { border-left-color: #7a7a9a; }

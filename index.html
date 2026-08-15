@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0d3b3f">
+  <link rel="manifest" href="manifest.json">
+  <title>Stock Comic Stores v3.0</title>
+  <link rel="stylesheet" href="estilos.css?v=3.0">
+  <script src="https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js"></script>
+</head>
+<body>
+  <div class="contenedor">
+    <header>
+      <h1>Stock Comic Stores</h1>
+      <p class="subtitulo">Escanea el EAN y mira el PVP y el stock de los 9 centros</p>
+      <p style="font-size:.75rem;opacity:.5;margin-top:4px">versión 3.0</p>
+    </header>
+
+    <div id="zona-escaner">
+      <div style="text-align:center;margin-bottom:24px">
+        <p style="font-size:.95rem;opacity:.8;margin-bottom:10px">Escribe el código de barras:</p>
+        <input type="text" id="input-manual" inputmode="numeric" autocomplete="off"
+               placeholder="Ej: 8437012332577"
+               style="width:100%;padding:14px;border-radius:10px;border:none;font-size:1.2rem;text-align:center;background:#2a2a40;color:white">
+        <button id="btn-manual" class="btn-principal" style="margin-top:12px">Buscar PVP</button>
+      </div>
+
+      <div style="border-top:1px solid #333;padding-top:20px;text-align:center">
+        <label for="input-foto" class="btn-secundario" style="display:block;padding:14px;margin-bottom:12px;cursor:pointer">Fotografiar codigo</label>
+        <input type="file" id="input-foto" accept="image/*" capture="environment" style="display:none">
+
+        <button id="btn-escanear" class="btn-secundario">Escanear con camara</button>
+        <button id="btn-parar" class="btn-secundario" style="display:none;margin-top:8px">Detener cámara</button>
+      </div>
+
+      <div id="lector" style="margin-top:16px;display:none">
+        <video id="video" playsinline muted style="width:100%;border-radius:12px;background:#000"></video>
+        <p id="estado-camara" style="text-align:center;margin-top:10px;font-size:.9rem;opacity:.75">Apunta al codigo de barras y manten el movil quieto.</p>
+      </div>
+    </div>
+
+    <div id="resultado" class="oculto">
+      <div class="tarjeta">
+        <p class="codigo"><strong>Código:</strong> <span id="codigo-leido"></span></p>
+        <div id="info-producto"></div>
+        <div class="botones-accion" style="margin-top:20px">
+          <a id="enlace-directo" href="#" target="_blank" rel="noopener" class="btn-secundario" style="display:none;margin-bottom:10px">Ver en Comic Stores</a>
+          <button id="btn-nuevo" class="btn-principal">Volver / buscar otro</button>
+        </div>
+      </div>
+    </div>
+
+    <footer><p>Datos de comicstores.es - Uso interno - Stock v3.0</p></footer>
+  </div>
+  <script src="app.js?v=3.0"></script>
+</body>
+</html>
