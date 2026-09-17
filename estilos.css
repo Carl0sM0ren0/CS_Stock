@@ -129,12 +129,13 @@ footer { text-align: center; margin-top: 40px; font-size: 0.75rem; opacity: 0.5;
 }
 
 .centros-lista { list-style: none; }
+/* El nombre arriba y, debajo, el texto tal cual lo dice Comic Stores. En una
+   sola linea no cabria: hay mensajes de hasta 40 caracteres. */
 .centro {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 11px 12px;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px;
   margin-bottom: 6px;
   border-radius: 10px;
   background: #212135;
@@ -145,24 +146,20 @@ footer { text-align: center; margin-top: 40px; font-size: 0.75rem; opacity: 0.5;
   font-weight: 600;
 }
 .centro-estado {
-  flex: 0 0 auto;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: .78rem;
-  font-weight: 700;
-  white-space: nowrap;
-  background: #33334f;
-  color: #d5d5ea;
+  font-size: .84rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: #c2c2d8;
 }
 
 /* Semaforo: verde disponible, ambar bajo encargo, rojo sin stock. */
 .centro--stock { border-left-color: #4ade80; }
-.centro--stock .centro-estado { background: #14532d; color: #86efac; }
+.centro--stock .centro-estado { color: #86efac; }
 
 .centro--encargo { border-left-color: #fbbf24; }
-.centro--encargo .centro-estado { background: #4a3506; color: #fcd34d; }
+.centro--encargo .centro-estado { color: #fcd34d; }
 
-.centro--sin { border-left-color: #f87171; opacity: .72; }
-.centro--sin .centro-estado { background: #4c1d1d; color: #fca5a5; }
+.centro--sin { border-left-color: #f87171; opacity: .78; }
+.centro--sin .centro-estado { color: #fca5a5; }
 
 .centro--otro { border-left-color: #7a7a9a; }

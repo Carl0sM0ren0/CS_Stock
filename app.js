@@ -340,12 +340,8 @@ function escapar(texto) {
 /* Stock en tiendas                                                     */
 /* ------------------------------------------------------------------ */
 
-const ETIQUETAS_ESTADO = {
-  stock: 'En stock',
-  encargo: 'Bajo encargo',
-  sin: 'Sin stock',
-  otro: 'Consultar'
-};
+// No se reescribe el texto de Comic Stores: se muestra tal cual lo dice la
+// ficha. El estado solo decide el color, para poder leer la lista de un vistazo.
 
 function bloqueCentros(centros, desdeCache) {
   const boton = `<button id="btn-refrescar" class="btn-refrescar" type="button">Actualizar</button>`;
@@ -362,6 +358,7 @@ function bloqueCentros(centros, desdeCache) {
     ? `${conStock.length} de ${centros.length} centros con stock`
     : `Ningun centro tiene stock ahora mismo`;
 
+
   // Primero los que tienen stock: es lo que se mira en el mostrador.
   const orden = { stock: 0, encargo: 1, otro: 2, sin: 3 };
   const ordenados = [...centros].sort((a, b) =>
@@ -370,7 +367,7 @@ function bloqueCentros(centros, desdeCache) {
   const filas = ordenados.map(centro => `
     <li class="centro centro--${escapar(centro.estado)}">
       <span class="centro-nombre">${escapar(centro.centro)}</span>
-      <span class="centro-estado">${escapar(ETIQUETAS_ESTADO[centro.estado] || centro.disponibilidad)}</span>
+      <span class="centro-estado">${escapar(centro.disponibilidad || 'Sin informacion')}</span>
     </li>`).join('');
 
   return `<section class="centros">

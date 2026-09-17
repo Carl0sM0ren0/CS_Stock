@@ -1,4 +1,4 @@
-# Stock Comic Stores v3.0
+# Stock Comic Stores v3.1
 
 App web (PWA) que, a partir de un EAN, muestra de comicstores.es:
 
@@ -69,6 +69,23 @@ https://TU-WORKER.TU-CUENTA.workers.dev/?ean=8437012332577&nocache=1
 Debe devolver un JSON con 9 entradas en `centros`. Si viene vacio, Comic Stores
 ha cambiado la maquetacion del bloque y hay que ajustar `extraerCentros()` en
 `worker.js`.
+
+## Novedades de la v3.1
+
+- **Arreglado el stock en las fichas de libro.** La ficha nombra "Stock en
+  tiendas" dos veces: el boton que abre la ventana y el encabezado de la
+  ventana en si, separados por unos 90.000 caracteres. El parser se quedaba
+  con la primera y acababa leyendo el listado de tiendas y el formulario de
+  comentarios en vez de los centros. Ahora prueba todas las apariciones y se
+  queda con la que devuelve un listado creible.
+- **El parser ya no depende de la maquetacion.** Empareja el nombre del centro
+  con su disponibilidad mirando los textos sueltos que hay entre etiquetas, asi
+  que da igual que la web use `<ul>`, `<table>` o `<div>`.
+- **Se muestra el texto literal de Comic Stores.** Antes se reescribia como
+  "Bajo encargo" o "Consultar"; ahora pone exactamente lo que dice la ficha y
+  el color es lo unico que interpreta.
+- **Descartadas las resenas de Google** que la ficha trae debajo: fechas como
+  "hace 2 semanas" se colaban como si fueran disponibilidad.
 
 ## Que cambia respecto a la v2.5 de PVP
 

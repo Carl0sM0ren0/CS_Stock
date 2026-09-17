@@ -125,88 +125,127 @@ async function consultarComicStores(ean) {
 /* Stock en tiendas                                                     */
 /* ------------------------------------------------------------------ */
 
-// Centros conocidos de Comic Stores. Solo se usan como respaldo si el bloque
-// de la ficha no viene con la estructura de lista habitual.
+// Centros conocidos, en minusculas y sin tildes. NO se usan para localizar las
+// filas (asi la app sigue funcionando si abren un centro nuevo), solo para
+// puntuar cual de los bloques de la ficha es de verdad el de stock.
 const CENTROS_CONOCIDOS = [
-  'Almacen', 'Almacén',
-  'CS Fuengirola', 'CS Granada',
-  'CS Malaga Soho', 'CS Málaga Soho',
-  'CS Malaga Tilos', 'CS Málaga Tilos',
-  'CS Murcia',
-  'Freak Point Almeria', 'Freak Point Almería',
-  'Freak Point Huelva',
-  'Freak Point Malaga', 'Freak Point Málaga'
+  'almacen', 'cs fuengirola', 'cs granada', 'cs malaga soho', 'cs malaga tilos',
+  'cs murcia', 'freak point almeria', 'freak point huelva', 'freak point malaga'
 ];
+
+// Frases con las que Comic Stores expresa la disponibilidad de un centro.
+// Ojo: nada de "semana" o "dias" sueltos. La ficha lleva resenas de Google con
+// fechas tipo "hace 2 semanas" justo debajo, y se colaban como si fueran filas
+// de disponibilidad. Las frases reales ya caen por "disponible" o "reserv".
+const PATRON_DISPONIBILIDAD = /(en stock|sin stock|no disponible|agotado|descatalogado|ultim[oa]s? unidad|disponible|reserv|encargo|bajo pedido|consult|en \d+ (dia|semana))/;
 
 function extraerCentros(html) {
   const contenido = String(html || '');
-  const encabezado = contenido.search(/stock\s+en\s+tienda/i);
-  if (encabezado === -1) return [];
 
-  const bloque = contenido.slice(encabezado, encabezado + 30000);
-  const centros = extraerCentrosDeLista(bloque);
-  return centros.length ? centros : extraerCentrosPorNombre(bloque);
-}
-
-function extraerCentrosDeLista(bloque) {
-  // Tras el encabezado puede haber varias listas (migas, menus, relacionados).
-  // Se leen todas y se elige la que mas filas de disponibilidad reconocibles tenga.
-  const listas = bloque.match(/<(ul|ol|table)\b[^>]*>[\s\S]*?<\/\1>/gi) || [];
+  // La ficha nombra "Stock en tiendas" mas de una vez: el boton que abre la
+  // ventana y el encabezado de la ventana en si, separados por decenas de
+  // miles de caracteres. Se prueban todas las apariciones y se elige la que
+  // devuelve el listado mas creible.
   let mejor = [];
+  let mejorPuntos = 0;
 
-  for (const lista of listas) {
-    const centros = leerFilas(lista);
-    const reconocidos = centros.filter(c => c.estado !== 'otro').length;
-    const mejorReconocidos = mejor.filter(c => c.estado !== 'otro').length;
-    if (reconocidos > mejorReconocidos) mejor = centros;
+  for (const encaje of contenido.matchAll(/stock\s+en\s+tienda/gi)) {
+    const centros = leerBloqueDeCentros(contenido.slice(encaje.index, encaje.index + 20000));
+    const puntos = puntuarCentros(centros);
+    if (puntos > mejorPuntos) {
+      mejor = centros;
+      mejorPuntos = puntos;
+    }
   }
 
-  return mejor.filter(c => c.estado !== 'otro').length >= 2 ? mejor : [];
+  return mejor;
 }
 
-function leerFilas(lista) {
-  const filas = lista.match(/<(li|tr)\b[^>]*>[\s\S]*?<\/\1>/gi) || [];
+// Se trabaja sobre los textos sueltos que hay entre etiquetas, sin depender de
+// que el bloque sea <ul>, <table> o <div>: basta con que el nombre del centro y
+// su disponibilidad esten en elementos distintos, que es como lo maqueta la web.
+function leerBloqueDeCentros(bloque) {
+  const segmentos = trocearEnTextos(bloque);
   const centros = [];
+  let i = 0;
+  let fallos = 0;
 
-  for (const fila of filas) {
-    const partes = trocearFila(fila);
-    if (partes.length < 2) continue;
+  while (i < segmentos.length && centros.length < 25) {
+    const actual = segmentos[i];
+    const siguiente = segmentos[i + 1];
 
-    const nombre = partes[0];
-    const disponibilidad = partes.slice(1).join(' ');
-    // Las filas reales son cortas; asi se descartan menus y bloques ajenos.
-    if (nombre.length > 60 || disponibilidad.length > 120) continue;
+    // Caso "CS Granada: En stock", todo dentro del mismo elemento. Se mira
+    // primero para que el encabezado no se empareje con la fila que le sigue.
+    const partido = partirSegmento(actual);
+    if (partido) {
+      centros.push(partido);
+      i += 1;
+      fallos = 0;
+      continue;
+    }
 
-    centros.push(construirCentro(nombre, disponibilidad));
-    if (centros.length >= 20) break;
+    // Caso normal: "CS Granada" y "En stock" en dos elementos seguidos.
+    if (siguiente !== undefined && pareceCentro(actual) && pareceDisponibilidad(siguiente)) {
+      centros.push(construirCentro(actual, siguiente));
+      i += 2;
+      fallos = 0;
+      continue;
+    }
+
+    i += 1;
+    // El listado es contiguo: si ya empezo y se corta, se deja de mirar.
+    if (centros.length) {
+      fallos += 1;
+      if (fallos > 12) break;
+    }
   }
+
   return centros;
 }
 
-function extraerCentrosPorNombre(bloque) {
-  const texto = htmlATexto(bloque);
-  const nombres = [...new Set(CENTROS_CONOCIDOS)]
-    .map(nombre => ({ nombre, indice: texto.indexOf(nombre) }))
-    .filter(item => item.indice !== -1)
-    .sort((a, b) => a.indice - b.indice);
-
-  const centros = [];
-  for (let i = 0; i < nombres.length; i++) {
-    const actual = nombres[i];
-    const fin = i + 1 < nombres.length
-      ? nombres[i + 1].indice
-      : Math.min(texto.length, actual.indice + 160);
-    const disponibilidad = limpiarTexto(texto.slice(actual.indice + actual.nombre.length, fin));
-    if (!disponibilidad) continue;
-    centros.push(construirCentro(actual.nombre, disponibilidad));
-  }
-  return centros;
+function puntuarCentros(centros) {
+  // Un listado de verdad trae los centros de la cadena; menos de tres filas
+  // casi siempre es ruido de otro bloque de la pagina.
+  if (centros.length < 3) return 0;
+  const conocidos = centros.filter(centro => esCentroConocido(centro.centro)).length;
+  return centros.length + conocidos * 10;
 }
 
-function trocearFila(fila) {
-  return String(fila)
-    .replace(/<(script|style)[\s\S]*?<\/\1>/gi, ' ')
-    .split(/<[^>]+>/)
+function esCentroConocido(nombre) {
+  return CENTROS_CONOCIDOS.includes(quitarTildes(nombre).toLowerCase());
+}
+
+function pareceCentro(texto) {
+  const t = quitarTildes(texto).toLowerCase();
+  return texto.length >= 3
+    && texto.length <= 50
+    && /[a-z]/.test(t)
+    && !/^\d+$/.test(t)
+    && !/[:;!?]/.test(texto)
+    && !/stock\s+en\s+tienda/.test(t)
+    && !PATRON_DISPONIBILIDAD.test(t);
+}
+
+function pareceDisponibilidad(texto) {
+  const t = quitarTildes(texto).toLowerCase();
+  return texto.length >= 2
+    && texto.length <= 90
+    && !/^hace\s/.test(t)
+    && PATRON_DISPONIBILIDAD.test(t);
+}
+
+function partirSegmento(texto) {
+  const encaje = String(texto).match(/^(.{2,50}?)\s*[:\u2013\u2014-]\s*(.{2,90})$/);
+  if (!encaje) return null;
+  if (!pareceCentro(encaje[1]) || !pareceDisponibilidad(encaje[2])) return null;
+  return construirCentro(encaje[1], encaje[2]);
+}
+
+function trocearEnTextos(bloque) {
+  return String(bloque)
+    .replace(/<(script|style)\b[\s\S]*?<\/\1>/gi, ' ')
+    .replace(/<!--[\s\S]*?-->/g, ' ')
+    .split(/<[^>]*>/)
     .map(parte => limpiarTexto(decodificarEntidades(parte)))
     .filter(Boolean);
 }
@@ -222,7 +261,7 @@ function construirCentro(nombre, disponibilidad) {
 function clasificarEstado(texto) {
   const t = quitarTildes(String(texto)).toLowerCase();
   if (/sin stock|no disponible|agotado|descatalogado|no hay/.test(t)) return 'sin';
-  if (/en stock|disponible en tienda|ultimas unidades|hay stock/.test(t)) return 'stock';
+  if (/en stock|disponible en tienda|ultim[oa]s? unidad|hay stock/.test(t)) return 'stock';
   if (/reserv|encargo|bajo pedido|semana|dia|plazo/.test(t)) return 'encargo';
   return 'otro';
 }
