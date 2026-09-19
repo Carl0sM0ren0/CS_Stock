@@ -94,15 +94,11 @@ async function consultarComicStores(ean) {
     productUrl = searchFinalUrl;
   }
 
-  const texto = htmlATexto(productHtml);
   const titulo = limpiarTexto(extraerTitulo(productHtml)) || 'Producto encontrado';
-  const precios = [...texto.matchAll(/(\d{1,4}(?:\.\d{3})*,\d{2})\s*€/g)]
-    .map(m => Number(m[1].replace(/\./g, '').replace(',', '.')))
-    .filter(n => Number.isFinite(n) && n > 0 && n < 100000);
+  const pvp = extraerPvp(productHtml);
 
-  if (!precios.length) return { error: 'Producto encontrado, pero no se pudo leer el precio', status: 422 };
+  if (pvp === null) return { error: 'Producto encontrado, pero no se pudo leer el precio', status: 422 };
 
-  const pvp = Math.max(...new Set(precios));
   const imagen = extraerImagen(productHtml, productUrl);
   const sku = extraerSku(productUrl);
   const centros = extraerCentros(productHtml);
@@ -121,6 +117,39 @@ async function consultarComicStores(ean) {
   };
 }
 
+
+/* ------------------------------------------------------------------ */
+/* Precio                                                               */
+/* ------------------------------------------------------------------ */
+
+// El PVP se lee SOLO del bloque de compra del producto: desde el <h1> del
+// titulo hasta "IVA incluido" / "Anadir a mi cesta". Antes se cogia el importe
+// mas alto de toda la pagina, y en fichas baratas ganaba el precio de algun
+// producto relacionado (p. ej. un libro de 1,99 EUR salia a 73,00 EUR por un
+// "Sherlock Holmes Anotado" de la seccion de recomendados).
+function extraerPvp(html) {
+  const contenido = String(html || '');
+  const inicio = Math.max(0, contenido.search(/<h1\b/i));
+  const resto = contenido.slice(inicio);
+
+  const fin = resto.search(/IVA\s+incluido|A(?:ñ|&ntilde;|n)adir\s+a\s+mi\s+cesta/i);
+  const bloque = fin === -1 ? resto.slice(0, 15000) : resto.slice(0, fin);
+
+  // En el bloque de compra hay, como mucho, el PVP y el precio web con
+  // descuento. El PVP normal es el mayor de los dos.
+  const enBloque = leerImportes(htmlATexto(bloque));
+  if (enBloque.length) return Math.max(...enBloque);
+
+  // Respaldo: primeros importes tras el titulo (PVP y precio web van juntos).
+  const primeros = leerImportes(htmlATexto(resto)).slice(0, 2);
+  return primeros.length ? Math.max(...primeros) : null;
+}
+
+function leerImportes(texto) {
+  return [...String(texto).matchAll(/(\d{1,4}(?:\.\d{3})*,\d{2})\s*€/g)]
+    .map(m => Number(m[1].replace(/\./g, '').replace(',', '.')))
+    .filter(n => Number.isFinite(n) && n > 0 && n < 100000);
+}
 /* ------------------------------------------------------------------ */
 /* Stock en tiendas                                                     */
 /* ------------------------------------------------------------------ */
